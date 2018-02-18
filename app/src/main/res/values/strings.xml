@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">CSS Detail Guide</string>
+    <string-array name="spinner_options">
+        <item>Angles</item>
+        <item>Beams</item>
+        <item>Channels</item>
+        <item>Pipe</item>
+        <item>Tube (Rectangular)</item>
+        <item>Tube (Cylindrical)</item>
+    </string-array>
+</resources>
