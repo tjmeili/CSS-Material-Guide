@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CSS Detail Guide</string>
+    <string name="app_name">CSS Material Guide</string>
     <string-array name="spinner_options">
         <item>Angles</item>
         <item>Beams</item>

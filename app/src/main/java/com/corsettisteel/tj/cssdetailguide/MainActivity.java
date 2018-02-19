@@ -5,8 +5,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.media.MediaPlayer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -37,9 +39,11 @@ public class MainActivity extends AppCompatActivity {
     private ListView listView;
     private TextView tvDetail1, tvDetail2, tvDetail3, tvDetail4, tv1, tv2, tv3, tv4;
     private ImageView ivDesign;
+    private MediaPlayer player;
 
     private View selector;
-    private static boolean appStarted = false, configChanged = false;
+    private static boolean appStarted = false, loadingNewData = false;
+    private static int prevItem = 0;
     private int itemsToShow = 11, cellHeight, middleCell, firstVisibleItem;
 
     @Override
@@ -60,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         relativeLayout = (RelativeLayout) findViewById(R.id.relativeLayout);
         relativeLayoutSpinner = (RelativeLayout) findViewById(R.id.relativeLayoutSpinner);
 
-
+        player = MediaPlayer.create(this, R.raw.click2);
 
         beams = new ArrayList<>();
         channels = new ArrayList<>();
@@ -125,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                loadingNewData = true;
                 adapter.clear();
                 switch(i){
                     case 0 :
@@ -160,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
                     listDataChanged();
                     addEmpties();
                 }
+                loadingNewData = false;
 
             }
 
@@ -180,27 +186,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     private void listDataChanged(){
-        adapter.setCellHeight(cellHeight);
 
-        listView.setAdapter(adapter);
+        if(loadingNewData || !appStarted){
+            adapter.setCellHeight(cellHeight);
+            listView.setAdapter(adapter);
+            listView.setSelection(adapter.getCount() / 2);
+            firstVisibleItem = adapter.getCount() / 2;
+        }
 
-        listView.setSelection(adapter.getCount() / 2);
-
-
-        firstVisibleItem = adapter.getCount() / 2;
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        configChanged = true;
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
+    public void onWindowFocusChanged(final boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
         int height = listView.getHeight();
@@ -215,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        if(hasFocus && !spinner.hasFocus()){
+        if(hasFocus){
 
             listDataChanged();
             if(!appStarted){
@@ -239,11 +237,13 @@ public class MainActivity extends AppCompatActivity {
                                 firstVisibleItem++;
                                 listView.setSelection(firstVisibleItem);
 
+
                             } else {
                                 listView.setSelection(firstVisibleItem);
-
+                                view.playSoundEffect(SoundEffectConstants.CLICK);
                             }
                             int mid = (firstVisibleItem + listView.getLastVisiblePosition()) / 2;
+                            //setDetails(mid + "", "", "", "");
                             displayItemDataAtPosition(mid);
 
                         }
@@ -253,12 +253,21 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                    if(firstVisibleItem != prevItem){
+                        int mi = firstVisibleItem + (itemsToShow / 2);
+                        view.playSoundEffect(SoundEffectConstants.CLICK);
+                        //player.start();
+                        if(!loadingNewData){
+                            displayItemDataAtPosition(mi);
+                        }
 
+                        //setDetails(mi + "", "", "", "");
+                    }
+                    prevItem = firstVisibleItem;
 
                 }
             });
 
-            configChanged = false;
             appStarted = true;
         }
 
