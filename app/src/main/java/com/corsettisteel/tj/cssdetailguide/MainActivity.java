@@ -1,54 +1,39 @@
 package com.corsettisteel.tj.cssdetailguide;
 
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
-import android.os.Parcelable;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.Spinner;
-import android.widget.TextView;
+import android.widget.*;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG_SPINNER_POSITION = "spinner position", TAG_LIST_POSITION = "list position";
+    private static boolean appStarted = false, loadingNewData = false, orientationChanged = false;
+    private static int prevItem = 0, saveStateItemPos = -1;
     private ArrayList<Beam> beams;
     private ArrayList<Angle> angles;
     private ArrayList<Channel> channels;
     private ArrayList<Pipe> pipes;
     private ArrayList<Tube> recTubes;
     private ArrayList<Tube> cylTubes;
-
     private ArrayAdapter<CharSequence> spinnerAdapter;
     private CustomAdapter adapter;
-
     private RelativeLayout relativeLayout, relativeLayoutSpinner;
     private Spinner spinner;
     private ListView listView;
     private TextView tvDetail1, tvDetail2, tvDetail3, tvDetail4, tv1, tv2, tv3, tv4;
     private ImageView ivDesign;
     private MediaPlayer player;
-
     private View selector;
-    private static boolean appStarted = false, loadingNewData = false, orientationChanged = false;
-    private static int prevItem = 0, saveStateItemPos = -1;
     private int itemsToShow = 11, cellHeight, middleCell, firstVisibleItem, selectedList = -1;
-
-    private static final String TAG_SPINNER_POSITION = "spinner position", TAG_LIST_POSITION = "list position";
     private Bundle savedInstanceState = null;
 
     @Override
@@ -56,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if(savedInstanceState != null){
+        if (savedInstanceState != null) {
             this.savedInstanceState = savedInstanceState;
         }
 
@@ -68,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         tv2 = (TextView) findViewById(R.id.tv2);
         tv3 = (TextView) findViewById(R.id.tv3);
         tv4 = (TextView) findViewById(R.id.tv4);
-        spinner = (Spinner)findViewById(R.id.spinner);
+        spinner = (Spinner) findViewById(R.id.spinner);
         ivDesign = (ImageView) findViewById(R.id.ivDesign);
         relativeLayout = (RelativeLayout) findViewById(R.id.relativeLayout);
         relativeLayoutSpinner = (RelativeLayout) findViewById(R.id.relativeLayoutSpinner);
@@ -88,8 +73,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    private void initializePicker(){
+    private void initializePicker() {
         getLayoutInflater().inflate(R.layout.custom_picker, relativeLayout, true);
         listView = (ListView) relativeLayout.findViewById(R.id.listview);
         selector = (View) relativeLayout.findViewById(R.id.chooser);
@@ -100,17 +84,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
 
-                if(scrollState == SCROLL_STATE_IDLE){
+                if (scrollState == SCROLL_STATE_IDLE) {
 
                     View child = view.getChildAt(0);
 
-                    if(child != null){
+                    if (child != null) {
                         firstVisibleItem = listView.getFirstVisiblePosition();
                         Rect r = new Rect(0, 0, child.getWidth(), child.getHeight());
                         double height = child.getHeight() * 1.0;
 
                         view.getChildVisibleRect(child, r, null);
-                        if(Math.abs(r.height()) < (int) height / 2){
+                        if (Math.abs(r.height()) < (int) height / 2) {
                             firstVisibleItem++;
                             listView.setSelection(firstVisibleItem);
 
@@ -131,11 +115,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if(firstVisibleItem != prevItem){
+                if (firstVisibleItem != prevItem) {
                     int mi = firstVisibleItem + (itemsToShow / 2);
                     view.playSoundEffect(SoundEffectConstants.CLICK);
                     //player.start();
-                    if(!loadingNewData){
+                    if (!loadingNewData) {
                         displayItemDataAtPosition(mi);
                     }
 
@@ -147,7 +131,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-
 
 
     @Override
@@ -167,14 +150,14 @@ public class MainActivity extends AppCompatActivity {
 
         adapter.setCellHeight(cellHeight);
 
-        if(selector.getLayoutParams() instanceof  ViewGroup.MarginLayoutParams){
+        if (selector.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
             ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) selector.getLayoutParams();
             p.height = cellHeight;
             p.setMargins(0, cellHeight * middleCell, 0, 0);
             selector.requestLayout();
         }
 
-        if(savedInstanceState != null){
+        if (savedInstanceState != null) {
             spinner.setSelection(savedInstanceState.getInt(TAG_SPINNER_POSITION));
             listView.setSelection(savedInstanceState.getInt(TAG_LIST_POSITION));
         }
@@ -206,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void initializeSpinner(){
+    private void initializeSpinner() {
         spinnerAdapter = new ArrayAdapter<CharSequence>(this, R.layout.spinner_text, getResources().getStringArray(R.array.spinner_options));
         spinnerAdapter.setDropDownViewResource(R.layout.simple_spinner_dropdown);
         spinner.setAdapter(spinnerAdapter);
@@ -216,28 +199,28 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 loadingNewData = true;
                 adapter.clear();
-                switch(i){
-                    case 0 :
+                switch (i) {
+                    case 0:
                         adapter.addAll(angles);
                         showAngles();
                         break;
-                    case 1 :
+                    case 1:
                         adapter.addAll(beams);
                         showBeams();
                         break;
-                    case 2 :
+                    case 2:
                         adapter.addAll(channels);
                         showChannels();
                         break;
-                    case 3 :
+                    case 3:
                         adapter.addAll(pipes);
                         showPipes();
                         break;
-                    case 4 :
+                    case 4:
                         adapter.addAll(recTubes);
                         showRecTubes();
                         break;
-                    case 5 :
+                    case 5:
                         adapter.addAll(cylTubes);
                         showCylTubes();
                         break;
@@ -267,17 +250,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void addEmpties(){
+    private void addEmpties() {
         adapter.addEmpties(itemsToShow / 2);
 
     }
 
-    private void displayItemDataAtPosition(int position){
+    private void displayItemDataAtPosition(int position) {
         int pos = position - (itemsToShow / 2);
         int selected = spinner.getSelectedItemPosition();
-        switch (selected){
+        switch (selected) {
             case 0:
-                setDetails(angles.get(pos).getWpf(),"","","");
+                setDetails(angles.get(pos).getWpf(), "", "", "");
                 break;
             case 1:
                 Beam b = beams.get(pos);
@@ -292,58 +275,58 @@ public class MainActivity extends AppCompatActivity {
                 setDetails(p.getOd(), p.getThickness(), p.getWpf(), "");
                 break;
             case 4:
-                setDetails(recTubes.get(pos).getWpf(),"","","");
+                setDetails(recTubes.get(pos).getWpf(), "", "", "");
                 break;
             case 5:
-                setDetails(cylTubes.get(pos).getWpf(),"", "", "");
+                setDetails(cylTubes.get(pos).getWpf(), "", "", "");
                 break;
             default:
                 setDetails("0", "0", "0", "0");
         }
     }
 
-    private void showAngles(){
+    private void showAngles() {
         //show design image and details
         ivDesign.setImageResource(R.drawable.l);
         showWpfOnly();
     }
 
-    private void showBeams(){
+    private void showBeams() {
         //show design image and details
         ivDesign.setImageResource(R.drawable.w);
         showBeamDetails();
     }
 
-    private void showChannels(){
+    private void showChannels() {
         //show design image and details
         ivDesign.setImageResource(R.drawable.c);
         showBeamDetails();
     }
 
-    private void showPipes(){
+    private void showPipes() {
         //show design image and details
         ivDesign.setImageResource(R.drawable.pipe);
         showPipeDetails();
     }
 
-    private void showRecTubes(){
+    private void showRecTubes() {
         ivDesign.setImageResource(R.drawable.hss);
         showWpfOnly();
     }
 
-    private void showCylTubes(){
+    private void showCylTubes() {
         ivDesign.setImageResource(R.drawable.pipe);
         showWpfOnly();
     }
 
-    private void setDetails(String s1, String s2, String s3, String s4){
+    private void setDetails(String s1, String s2, String s3, String s4) {
         tvDetail1.setText(s1);
         tvDetail2.setText(s2);
         tvDetail3.setText(s3);
         tvDetail4.setText(s4);
     }
 
-    private void showWpfOnly(){
+    private void showWpfOnly() {
         tv1.setText("Weight/ft.:");
         tv2.setVisibility(View.INVISIBLE);
         tv3.setVisibility(View.INVISIBLE);
@@ -353,7 +336,7 @@ public class MainActivity extends AppCompatActivity {
         tvDetail4.setVisibility(View.INVISIBLE);
     }
 
-    private void showBeamDetails(){
+    private void showBeamDetails() {
         tv1.setText("Depth:");
         tv2.setText("Web:");
         tv3.setText("Width:");
@@ -366,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
         tvDetail4.setVisibility(View.VISIBLE);
     }
 
-    private void showPipeDetails(){
+    private void showPipeDetails() {
         tv1.setText("O.D.:");
         tv2.setText("Thickness:");
         tv3.setText("Weight/ft.:");
@@ -379,14 +362,14 @@ public class MainActivity extends AppCompatActivity {
         tvDetail4.setVisibility(View.INVISIBLE);
     }
 
-    private void populateData(){
+    private void populateData() {
         DatabaseHandler dbHandler = new DatabaseHandler(this);
 
         dbHandler.createDataBase();
         SQLiteDatabase db = dbHandler.getDatabase();
         String query = "SELECT * FROM Beams";
         Cursor data = db.rawQuery(query, null);
-        while(data.moveToNext()){
+        while (data.moveToNext()) {
             Beam b = new Beam();
             b.setShape(data.getString(0));
             b.setDepth(data.getString(1));
@@ -398,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
 
         query = "SELECT * FROM S_Beams";
         data = db.rawQuery(query, null);
-        while(data.moveToNext()){
+        while (data.moveToNext()) {
             Beam b = new Beam();
             b.setShape(data.getString(0));
             b.setDepth(data.getString(1));
@@ -410,7 +393,7 @@ public class MainActivity extends AppCompatActivity {
 
         query = "SELECT * FROM Junior_Beams";
         data = db.rawQuery(query, null);
-        while(data.moveToNext()){
+        while (data.moveToNext()) {
             Beam b = new Beam();
             b.setShape(data.getString(0));
             b.setDepth(data.getString(1));
@@ -422,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
 
         query = "SELECT * FROM Channels";
         data = db.rawQuery(query, null);
-        while(data.moveToNext()){
+        while (data.moveToNext()) {
             Channel c = new Channel();
             c.setShape(data.getString(0));
             c.setDepth(data.getString(1));
@@ -434,7 +417,7 @@ public class MainActivity extends AppCompatActivity {
 
         query = "SELECT * FROM Misc_Channels";
         data = db.rawQuery(query, null);
-        while(data.moveToNext()){
+        while (data.moveToNext()) {
             Channel c = new Channel();
             c.setShape(data.getString(0));
             c.setDepth(data.getString(1));
@@ -446,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
 
         query = "SELECT * FROM Angles";
         data = db.rawQuery(query, null);
-        while(data.moveToNext()){
+        while (data.moveToNext()) {
             Angle a = new Angle();
             a.setShape(data.getString(0));
             a.setWpf(data.getString(1));
@@ -455,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
 
         query = "SELECT * FROM Pipes";
         data = db.rawQuery(query, null);
-        while(data.moveToNext()){
+        while (data.moveToNext()) {
             Pipe p = new Pipe();
             p.setShape(data.getString(0));
             p.setOd(data.getString(1));
@@ -466,7 +449,7 @@ public class MainActivity extends AppCompatActivity {
 
         query = "SELECT * FROM Rect_Tubes";
         data = db.rawQuery(query, null);
-        while(data.moveToNext()){
+        while (data.moveToNext()) {
             Tube rt = new Tube();
             rt.setShape(data.getString(0));
             rt.setWpf(data.getString(1));
@@ -475,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
 
         query = "SELECT * FROM Cylindrical_Tubes";
         data = db.rawQuery(query, null);
-        while(data.moveToNext()){
+        while (data.moveToNext()) {
             Tube ct = new Tube();
             ct.setShape(data.getString(0));
             ct.setWpf(data.getString(1));
@@ -485,8 +468,6 @@ public class MainActivity extends AppCompatActivity {
         db.close();
 
     }
-
-
 
 
 }

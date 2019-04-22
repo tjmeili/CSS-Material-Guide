@@ -8,11 +8,11 @@ public class Component {
 
     private String shape;
 
-    public Component(){
+    public Component() {
         shape = "";
     }
 
-    public Component(String shape){
+    public Component(String shape) {
         this.shape = shape;
     }
 

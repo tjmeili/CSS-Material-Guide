@@ -4,11 +4,11 @@ package com.corsettisteel.tj.cssdetailguide;
  * Created by TJ on 2/10/2018.
  */
 
-public class Angle extends Component{
+public class Angle extends Component {
 
     private String wpf;
 
-    public Angle(){
+    public Angle() {
         setShape("");
         wpf = "";
     }

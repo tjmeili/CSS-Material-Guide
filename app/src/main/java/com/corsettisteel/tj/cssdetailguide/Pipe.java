@@ -4,11 +4,11 @@ package com.corsettisteel.tj.cssdetailguide;
  * Created by TJ on 2/10/2018.
  */
 
-public class Pipe extends Component{
+public class Pipe extends Component {
 
     private String od, thickness, wpf;
 
-    public Pipe(){
+    public Pipe() {
         setShape("");
         od = "";
         thickness = "";

@@ -1,6 +1,6 @@
 package com.corsettisteel.tj.cssdetailguide;
 
-public class Beam extends Component{
+public class Beam extends Component {
 
     private String depth, width, web, flange;
 

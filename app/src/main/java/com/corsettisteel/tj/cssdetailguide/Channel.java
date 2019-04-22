@@ -1,12 +1,10 @@
 package com.corsettisteel.tj.cssdetailguide;
 
-import android.content.ComponentName;
-
 /**
  * Created by TJ on 2/10/2018.
  */
 
-public class Channel extends Component{
+public class Channel extends Component {
 
     private String depth, width, web, flange;
 

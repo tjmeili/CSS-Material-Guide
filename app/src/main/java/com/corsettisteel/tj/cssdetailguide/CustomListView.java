@@ -18,7 +18,7 @@ import java.util.List;
  * Created by TJ on 2/27/2018.
  */
 
-public class CustomListView extends ListView{
+public class CustomListView extends ListView {
 
     private CustomAdapter adapter;
     private int itemsToShow;
@@ -31,18 +31,18 @@ public class CustomListView extends ListView{
         setAdapter(adapter);
     }
 
-    public void setItems(ArrayList<Component> items){
+    public void setItems(ArrayList<Component> items) {
         adapter.clear();
         adapter.addAll(items);
         adapter.notifyDataSetChanged();
         adapter.addEmpties(itemsToShow / 2);
     }
 
-    public void setItemsToShow(int itemsToShow){
+    public void setItemsToShow(int itemsToShow) {
         this.itemsToShow = itemsToShow;
     }
 
-    public int getMiddleCellPosition(){
+    public int getMiddleCellPosition() {
         return (getFirstVisiblePosition() + getLastVisiblePosition()) / 2;
     }
 
@@ -58,8 +58,7 @@ public class CustomListView extends ListView{
         }
 
 
-
-        public void setCellHeight(int height){
+        public void setCellHeight(int height) {
             cellHeight = height;
         }
 
@@ -68,7 +67,7 @@ public class CustomListView extends ListView{
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
             TextView textView = null;
 
-            if(convertView == null){
+            if (convertView == null) {
                 LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = inflater.inflate(R.layout.list_item, null);
                 textView = (TextView) convertView.findViewById(R.id.item_text);
@@ -77,10 +76,10 @@ public class CustomListView extends ListView{
                 textView = (TextView) convertView.getTag();
             }
 
-            if(textView != null){
+            if (textView != null) {
                 textView.setText(items.get(position).getShape());
                 //textView.setText(position + "");
-                if(textView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams){
+                if (textView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
                     ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) textView.getLayoutParams();
                     p.height = cellHeight;
                     textView.setLayoutParams(p);

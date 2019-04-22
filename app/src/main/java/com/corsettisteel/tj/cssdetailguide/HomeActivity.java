@@ -1,14 +1,13 @@
 package com.corsettisteel.tj.cssdetailguide;
 
-import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -51,7 +50,7 @@ public class HomeActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent dialIntent = new Intent(Intent.ACTION_DIAL);
                 dialIntent.setData(Uri.parse("tel:" + phoneNumber));
-                if(dialIntent.resolveActivity(getPackageManager()) != null){
+                if (dialIntent.resolveActivity(getPackageManager()) != null) {
                     startActivity(dialIntent);
                 }
 
@@ -64,7 +63,7 @@ public class HomeActivity extends AppCompatActivity {
                 Uri uri = Uri.parse("geo:0,0?q=" + address1 + " " + address2);
                 Intent mapIntent = new Intent(Intent.ACTION_VIEW, uri);
                 mapIntent.setPackage("com.google.android.apps.maps");
-                if(mapIntent.resolveActivity(getPackageManager()) != null){
+                if (mapIntent.resolveActivity(getPackageManager()) != null) {
                     startActivity(mapIntent);
                 }
             }
@@ -74,7 +73,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(website));
-                if(webIntent.resolveActivity(getPackageManager()) != null){
+                if (webIntent.resolveActivity(getPackageManager()) != null) {
                     startActivity(webIntent);
                 }
 
@@ -130,7 +129,7 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    private void longClickVibrate(){
+    private void longClickVibrate() {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         v.vibrate(500);
     }
