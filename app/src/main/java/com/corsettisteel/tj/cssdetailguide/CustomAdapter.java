@@ -1,17 +1,13 @@
 package com.corsettisteel.tj.cssdetailguide;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
-
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,6 +23,8 @@ public class CustomAdapter extends ArrayAdapter<Component>{
         super(context, resource, objects);
         items = objects;
     }
+
+
 
     public void setCellHeight(int height){
         cellHeight = height;
@@ -59,14 +57,15 @@ public class CustomAdapter extends ArrayAdapter<Component>{
         return convertView;
     }
 
-    // to enable choosing of EVERY item, we need to add on top and bottom the list empty
-    // items, so the user will be able scrolling there
+
     public void addEmpties(int size) {
         for (int i = 0; i < size; i++) {
             items.add(new Component());
             items.add(0, new Component());
         }
     }
+
+
 
 
     @Override

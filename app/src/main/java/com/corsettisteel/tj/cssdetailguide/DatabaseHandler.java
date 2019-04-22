@@ -5,6 +5,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -65,14 +66,13 @@ public class DatabaseHandler extends SQLiteOpenHelper{
 
         try{
             String path = this.getDatabase().getPath();
-            System.out.println("/n/n" + path + "/n/n");
 
             String myPath = DB_PATH + DB_NAME;
             checkDB = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
 
         }catch(SQLiteException e){
 
-            System.out.println("Database Doesn't Exist *********");
+            Log.e("SQLITE", "Database Doesn't Exist *********");
 
         }
 

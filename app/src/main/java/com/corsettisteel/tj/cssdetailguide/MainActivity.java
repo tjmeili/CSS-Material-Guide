@@ -6,8 +6,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,14 +44,21 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer player;
 
     private View selector;
-    private static boolean appStarted = false, loadingNewData = false;
-    private static int prevItem = 0;
-    private int itemsToShow = 11, cellHeight, middleCell, firstVisibleItem;
+    private static boolean appStarted = false, loadingNewData = false, orientationChanged = false;
+    private static int prevItem = 0, saveStateItemPos = -1;
+    private int itemsToShow = 11, cellHeight, middleCell, firstVisibleItem, selectedList = -1;
+
+    private static final String TAG_SPINNER_POSITION = "spinner position", TAG_LIST_POSITION = "list position";
+    private Bundle savedInstanceState = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if(savedInstanceState != null){
+            this.savedInstanceState = savedInstanceState;
+        }
 
         tvDetail1 = (TextView) findViewById(R.id.tvDepth);
         tvDetail2 = (TextView) findViewById(R.id.tvWeb);
@@ -64,8 +73,6 @@ public class MainActivity extends AppCompatActivity {
         relativeLayout = (RelativeLayout) findViewById(R.id.relativeLayout);
         relativeLayoutSpinner = (RelativeLayout) findViewById(R.id.relativeLayoutSpinner);
 
-        player = MediaPlayer.create(this, R.raw.click2);
-
         beams = new ArrayList<>();
         channels = new ArrayList<>();
         angles = new ArrayList<>();
@@ -77,49 +84,127 @@ public class MainActivity extends AppCompatActivity {
         initializePicker();
         initializeSpinner();
 
+
     }
 
-    private void showAngles(){
-        //show design image and details
-        ivDesign.setImageResource(R.drawable.l);
-        showWpfOnly();
-    }
 
-    private void showBeams(){
-        //show design image and details
-        ivDesign.setImageResource(R.drawable.w);
-        showBeamDetails();
-    }
-
-    private void showChannels(){
-        //show design image and details
-        ivDesign.setImageResource(R.drawable.c);
-        showBeamDetails();
-    }
-
-    private void showPipes(){
-        //show design image and details
-        ivDesign.setImageResource(R.drawable.pipe);
-        showPipeDetails();
-    }
-
-    private void showRecTubes(){
-        ivDesign.setImageResource(R.drawable.hss);
-        showWpfOnly();
-    }
-
-    private void showCylTubes(){
-        ivDesign.setImageResource(R.drawable.pipe);
-        showWpfOnly();
-    }
 
     private void initializePicker(){
         getLayoutInflater().inflate(R.layout.custom_picker, relativeLayout, true);
         listView = (ListView) relativeLayout.findViewById(R.id.listview);
         selector = (View) relativeLayout.findViewById(R.id.chooser);
         adapter = new CustomAdapter(this, R.layout.list_item, new ArrayList<Component>());
+        listView.setAdapter(adapter);
+
+        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+                if(scrollState == SCROLL_STATE_IDLE){
+
+                    View child = view.getChildAt(0);
+
+                    if(child != null){
+                        firstVisibleItem = listView.getFirstVisiblePosition();
+                        Rect r = new Rect(0, 0, child.getWidth(), child.getHeight());
+                        double height = child.getHeight() * 1.0;
+
+                        view.getChildVisibleRect(child, r, null);
+                        if(Math.abs(r.height()) < (int) height / 2){
+                            firstVisibleItem++;
+                            listView.setSelection(firstVisibleItem);
+
+
+                        } else {
+                            listView.setSelection(firstVisibleItem);
+                            view.playSoundEffect(SoundEffectConstants.CLICK);
+                        }
+                        prevItem = firstVisibleItem;
+                        int mid = (firstVisibleItem + listView.getLastVisiblePosition()) / 2;
+                        //setDetails(mid + "", "", "", "");
+                        displayItemDataAtPosition(mid);
+
+                    }
+                }
+
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                if(firstVisibleItem != prevItem){
+                    int mi = firstVisibleItem + (itemsToShow / 2);
+                    view.playSoundEffect(SoundEffectConstants.CLICK);
+                    //player.start();
+                    if(!loadingNewData){
+                        displayItemDataAtPosition(mi);
+                    }
+
+                    //setDetails(mi + "", "", "", "");
+                }
+                prevItem = firstVisibleItem;
+
+            }
+        });
+
     }
 
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(TAG_SPINNER_POSITION, spinner.getSelectedItemPosition());
+        outState.putInt(TAG_LIST_POSITION, listView.getFirstVisiblePosition());
+    }
+
+    @Override
+    public void onWindowFocusChanged(final boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        int height = listView.getHeight();
+        cellHeight = height / itemsToShow;
+        middleCell = itemsToShow / 2;
+
+        adapter.setCellHeight(cellHeight);
+
+        if(selector.getLayoutParams() instanceof  ViewGroup.MarginLayoutParams){
+            ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) selector.getLayoutParams();
+            p.height = cellHeight;
+            p.setMargins(0, cellHeight * middleCell, 0, 0);
+            selector.requestLayout();
+        }
+
+        if(savedInstanceState != null){
+            spinner.setSelection(savedInstanceState.getInt(TAG_SPINNER_POSITION));
+            listView.setSelection(savedInstanceState.getInt(TAG_LIST_POSITION));
+        }
+
+        /*if(selectedList != -1 && saveStateItemPos != -1){
+            spinner.setSelection(selectedList);
+            listView.setSelectionFromTop(saveStateItemPos, 0);
+            saveStateItemPos = -1;
+            selectedList = -1;
+        } else if(!appStarted){
+            listView.setSelection(adapter.getCount() / 2);
+            firstVisibleItem = adapter.getCount() / 2;
+            addEmpties();
+            adapter.notifyDataSetChanged();
+            appStarted = true;
+        }*/
+
+        /*if(hasFocus){
+            adapter.setCellHeight(cellHeight);
+
+            if(!appStarted){
+                listView.setAdapter(adapter);
+
+            }
+
+            appStarted = true;
+        }*/
+
+
+    }
 
     private void initializeSpinner(){
         spinnerAdapter = new ArrayAdapter<CharSequence>(this, R.layout.spinner_text, getResources().getStringArray(R.array.spinner_options));
@@ -157,14 +242,20 @@ public class MainActivity extends AppCompatActivity {
                         showCylTubes();
                         break;
                 }
-                setDetails("0", "0", "0", "0");
+                //setDetails("0", "0", "0", "0");
+
 
                 adapter.notifyDataSetChanged();
-
-                if(appStarted){
-                    listDataChanged();
+                /*if(appStarted){
+                    listView.setSelection(adapter.getCount() / 2);
+                    firstVisibleItem = adapter.getCount() / 2;
                     addEmpties();
-                }
+                }*/
+
+                listView.setSelection(adapter.getCount() / 2);
+                firstVisibleItem = adapter.getCount() / 2;
+                addEmpties();
+
                 loadingNewData = false;
 
             }
@@ -176,100 +267,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private int getMiddleListViewPosition(){
-        return (firstVisibleItem + listView.getLastVisiblePosition()) / 2;
-    }
-
     private void addEmpties(){
         adapter.addEmpties(itemsToShow / 2);
-
-    }
-
-
-    private void listDataChanged(){
-
-        if(loadingNewData || !appStarted){
-            adapter.setCellHeight(cellHeight);
-            listView.setAdapter(adapter);
-            listView.setSelection(adapter.getCount() / 2);
-            firstVisibleItem = adapter.getCount() / 2;
-        }
-
-    }
-
-    @Override
-    public void onWindowFocusChanged(final boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-
-        int height = listView.getHeight();
-        cellHeight = height / itemsToShow;
-        middleCell = itemsToShow / 2;
-
-        if(selector.getLayoutParams() instanceof  ViewGroup.MarginLayoutParams){
-            ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) selector.getLayoutParams();
-            p.height = cellHeight;
-            p.setMargins(0, cellHeight * middleCell, 0, 0);
-            selector.requestLayout();
-        }
-
-
-        if(hasFocus){
-
-            listDataChanged();
-            if(!appStarted){
-                addEmpties();
-            }
-            listView.setOnScrollListener(new AbsListView.OnScrollListener() {
-                @Override
-                public void onScrollStateChanged(AbsListView view, int scrollState) {
-
-                    if(scrollState == SCROLL_STATE_IDLE){
-
-                        View child = view.getChildAt(0);
-
-                        if(child != null){
-                            firstVisibleItem = listView.getFirstVisiblePosition();
-                            Rect r = new Rect(0, 0, child.getWidth(), child.getHeight());
-                            double height = child.getHeight() * 1.0;
-
-                            view.getChildVisibleRect(child, r, null);
-                            if(Math.abs(r.height()) < (int) height / 2){
-                                firstVisibleItem++;
-                                listView.setSelection(firstVisibleItem);
-
-
-                            } else {
-                                listView.setSelection(firstVisibleItem);
-                                view.playSoundEffect(SoundEffectConstants.CLICK);
-                            }
-                            int mid = (firstVisibleItem + listView.getLastVisiblePosition()) / 2;
-                            //setDetails(mid + "", "", "", "");
-                            displayItemDataAtPosition(mid);
-
-                        }
-                    }
-
-                }
-
-                @Override
-                public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                    if(firstVisibleItem != prevItem){
-                        int mi = firstVisibleItem + (itemsToShow / 2);
-                        view.playSoundEffect(SoundEffectConstants.CLICK);
-                        //player.start();
-                        if(!loadingNewData){
-                            displayItemDataAtPosition(mi);
-                        }
-
-                        //setDetails(mi + "", "", "", "");
-                    }
-                    prevItem = firstVisibleItem;
-
-                }
-            });
-
-            appStarted = true;
-        }
 
     }
 
@@ -301,6 +300,40 @@ public class MainActivity extends AppCompatActivity {
             default:
                 setDetails("0", "0", "0", "0");
         }
+    }
+
+    private void showAngles(){
+        //show design image and details
+        ivDesign.setImageResource(R.drawable.l);
+        showWpfOnly();
+    }
+
+    private void showBeams(){
+        //show design image and details
+        ivDesign.setImageResource(R.drawable.w);
+        showBeamDetails();
+    }
+
+    private void showChannels(){
+        //show design image and details
+        ivDesign.setImageResource(R.drawable.c);
+        showBeamDetails();
+    }
+
+    private void showPipes(){
+        //show design image and details
+        ivDesign.setImageResource(R.drawable.pipe);
+        showPipeDetails();
+    }
+
+    private void showRecTubes(){
+        ivDesign.setImageResource(R.drawable.hss);
+        showWpfOnly();
+    }
+
+    private void showCylTubes(){
+        ivDesign.setImageResource(R.drawable.pipe);
+        showWpfOnly();
     }
 
     private void setDetails(String s1, String s2, String s3, String s4){
@@ -388,6 +421,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
         query = "SELECT * FROM Channels";
+        data = db.rawQuery(query, null);
+        while(data.moveToNext()){
+            Channel c = new Channel();
+            c.setShape(data.getString(0));
+            c.setDepth(data.getString(1));
+            c.setWeb(data.getString(2));
+            c.setWidth(data.getString(3));
+            c.setFlange(data.getString(4));
+            channels.add(c);
+        }
+
+        query = "SELECT * FROM Misc_Channels";
         data = db.rawQuery(query, null);
         while(data.moveToNext()){
             Channel c = new Channel();
