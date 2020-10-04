@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/CSSMaterialGuide4.iml" filepath="$PROJECT_DIR$/CSSMaterialGuide4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/CSSMaterialGuide_RELEASE.iml" filepath="$PROJECT_DIR$/.idea/modules/CSSMaterialGuide_RELEASE.iml" group="CSSMaterialGuide_RELEASE" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/app.iml" group="CSSMaterialGuide_RELEASE/app" />
     </modules>
   </component>
 </project>
