@@ -1,17 +1,28 @@
 package com.corsettisteel.tj.cssdetailguide;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Rect;
+import android.media.Image;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,10 +42,13 @@ public class MainActivity extends AppCompatActivity {
     private ListView listView;
     private TextView tvDetail1, tvDetail2, tvDetail3, tvDetail4, tv1, tv2, tv3, tv4;
     private ImageView ivDesign;
+    private ImageButton ibCalculator;
     private MediaPlayer player;
     private View selector;
     private int itemsToShow = 11, cellHeight, middleCell, firstVisibleItem, selectedList = -1;
     private Bundle savedInstanceState = null;
+
+    private String currentSelectedItemWeight = "0";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,13 +79,77 @@ public class MainActivity extends AppCompatActivity {
         cylTubes = new ArrayList<>();
         pipes = new ArrayList<>();
 
+        ibCalculator = (ImageButton) findViewById(R.id.ibCalculator);
+        ibCalculator.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                copyWeightToClipboard();
+                launchCalculator();
+            }
+        });
+
         populateData();
         initializePicker();
         initializeSpinner();
+    }
+
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(TAG_SPINNER_POSITION, spinner.getSelectedItemPosition());
+        outState.putInt(TAG_LIST_POSITION, listView.getFirstVisiblePosition());
+    }
+
+    @Override
+    public void onWindowFocusChanged(final boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        int height = listView.getHeight();
+        cellHeight = height / itemsToShow;
+        middleCell = itemsToShow / 2;
+
+        adapter.setCellHeight(cellHeight);
+
+        if (selector.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+            ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) selector.getLayoutParams();
+            p.height = cellHeight;
+            p.setMargins(0, cellHeight * middleCell, 0, 0);
+            selector.requestLayout();
+        }
+
+        if (savedInstanceState != null) {
+            spinner.setSelection(savedInstanceState.getInt(TAG_SPINNER_POSITION));
+            listView.setSelection(savedInstanceState.getInt(TAG_LIST_POSITION));
+        }
+
+        /*if(selectedList != -1 && saveStateItemPos != -1){
+            spinner.setSelection(selectedList);
+            listView.setSelectionFromTop(saveStateItemPos, 0);
+            saveStateItemPos = -1;
+            selectedList = -1;
+        } else if(!appStarted){
+            listView.setSelection(adapter.getCount() / 2);
+            firstVisibleItem = adapter.getCount() / 2;
+            addEmpties();
+            adapter.notifyDataSetChanged();
+            appStarted = true;
+        }*/
+
+        /*if(hasFocus){
+            adapter.setCellHeight(cellHeight);
+
+            if(!appStarted){
+                listView.setAdapter(adapter);
+
+            }
+
+            appStarted = true;
+        }*/
 
 
     }
-
 
     private void initializePicker() {
         getLayoutInflater().inflate(R.layout.custom_picker, relativeLayout, true);
@@ -129,63 +207,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-    }
-
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(TAG_SPINNER_POSITION, spinner.getSelectedItemPosition());
-        outState.putInt(TAG_LIST_POSITION, listView.getFirstVisiblePosition());
-    }
-
-    @Override
-    public void onWindowFocusChanged(final boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-
-        int height = listView.getHeight();
-        cellHeight = height / itemsToShow;
-        middleCell = itemsToShow / 2;
-
-        adapter.setCellHeight(cellHeight);
-
-        if (selector.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
-            ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) selector.getLayoutParams();
-            p.height = cellHeight;
-            p.setMargins(0, cellHeight * middleCell, 0, 0);
-            selector.requestLayout();
-        }
-
-        if (savedInstanceState != null) {
-            spinner.setSelection(savedInstanceState.getInt(TAG_SPINNER_POSITION));
-            listView.setSelection(savedInstanceState.getInt(TAG_LIST_POSITION));
-        }
-
-        /*if(selectedList != -1 && saveStateItemPos != -1){
-            spinner.setSelection(selectedList);
-            listView.setSelectionFromTop(saveStateItemPos, 0);
-            saveStateItemPos = -1;
-            selectedList = -1;
-        } else if(!appStarted){
-            listView.setSelection(adapter.getCount() / 2);
-            firstVisibleItem = adapter.getCount() / 2;
-            addEmpties();
-            adapter.notifyDataSetChanged();
-            appStarted = true;
-        }*/
-
-        /*if(hasFocus){
-            adapter.setCellHeight(cellHeight);
-
-            if(!appStarted){
-                listView.setAdapter(adapter);
-
-            }
-
-            appStarted = true;
-        }*/
-
 
     }
 
@@ -250,6 +271,47 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void launchCalculator() {
+        ArrayList<HashMap<String, Object>> items = new ArrayList<>();
+
+        final PackageManager pm = getPackageManager();
+        List<PackageInfo> packs = pm.getInstalledPackages(0);
+        for(PackageInfo pi : packs) {
+            if(pi.packageName.toString().toLowerCase().contains("calcul")) {
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("appName", pi.applicationInfo.loadLabel(pm));
+                map.put("packageName", pi.packageName);
+                items.add(map);
+            }
+        }
+
+        if(items.size() >= 1) {
+            String packageName = (String) items.get(0).get("packageName");
+            Intent i = pm.getLaunchIntentForPackage(packageName);
+            if(i != null) {
+                startActivity(i);
+            } else {
+                Log.d("CALCULATOR", "launchCalculator: failed");
+            }
+        }
+    }
+
+    private void copyWeightToClipboard() {
+        int sdk = Build.VERSION.SDK_INT;
+        if(sdk < Build.VERSION_CODES.HONEYCOMB) {
+            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if(clipboard != null)
+                clipboard.setText(currentSelectedItemWeight);
+        } else {
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("weight", currentSelectedItemWeight);
+            if(clipboard != null)
+                clipboard.setPrimaryClip(clip);
+        }
+    }
+
+
+
     private void addEmpties() {
         adapter.addEmpties(itemsToShow / 2);
 
@@ -260,7 +322,9 @@ public class MainActivity extends AppCompatActivity {
         int selected = spinner.getSelectedItemPosition();
         switch (selected) {
             case 0:
-                setDetails(angles.get(pos).getWpf(), "", "", "");
+                String wpf = angles.get(pos).getWpf();
+                setDetails(wpf, "", "", "");
+                currentSelectedItemWeight = wpf;
                 break;
             case 1:
                 Beam b = beams.get(pos);
@@ -273,12 +337,17 @@ public class MainActivity extends AppCompatActivity {
             case 3:
                 Pipe p = pipes.get(pos);
                 setDetails(p.getOd(), p.getThickness(), p.getWpf(), "");
+                currentSelectedItemWeight = p.getWpf();
                 break;
             case 4:
-                setDetails(recTubes.get(pos).getWpf(), "", "", "");
+                Tube rt = recTubes.get(pos);
+                setDetails(rt.getWpf(), "", "", "");
+                currentSelectedItemWeight = rt.getWpf();
                 break;
             case 5:
-                setDetails(cylTubes.get(pos).getWpf(), "", "", "");
+                Tube ct = cylTubes.get(pos);
+                setDetails(ct.getWpf(), "", "", "");
+                currentSelectedItemWeight = ct.getWpf();
                 break;
             default:
                 setDetails("0", "0", "0", "0");
@@ -468,6 +537,5 @@ public class MainActivity extends AppCompatActivity {
         db.close();
 
     }
-
 
 }
