@@ -83,7 +83,11 @@ public class MainActivity extends AppCompatActivity {
         ibCalculator.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                copyWeightToClipboard();
+                int selected = spinner.getSelectedItemPosition();
+                // Don't add to clipboard for beams or channels (WPF is in shape name not in DB. Requires parsing)
+                if(selected != 1 && selected != 2) {
+                    copyWeightToClipboard();
+                }
                 launchCalculator();
             }
         });
@@ -272,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void launchCalculator() {
+        // Launch default calculator. Compatible with all devices (probably).
         ArrayList<HashMap<String, Object>> items = new ArrayList<>();
 
         final PackageManager pm = getPackageManager();
